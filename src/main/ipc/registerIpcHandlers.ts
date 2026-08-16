@@ -11,6 +11,7 @@ import {
   shortcutValidateSchema,
   permissionKindSchema,
   navigateSchema,
+  toastShowSchema,
   parseOrThrow
 } from "../../shared/ipc/schemas";
 import { settingsStore } from "../settings/settingsStore";
@@ -31,6 +32,8 @@ import {
 } from "../permissions/permissionsService";
 import { getMainWindow, showMainWindow } from "../windows/mainWindow";
 import { getQuickPanelWindow, hideQuickPanel } from "../windows/quickPanelWindow";
+import { isSecureStorageAvailable } from "../security/secureStorage";
+import { showToast } from "../notifications/toastWindow";
 import { logger } from "../logger";
 
 /** Wraps a handler so any thrown error becomes a clean IPC rejection with a
@@ -154,6 +157,15 @@ export function registerIpcHandlers(): void {
 
   // Tray quick-access panel
   safeHandle(IPC.PANEL_HIDE, () => hideQuickPanel());
+
+  // Security
+  safeHandle(IPC.SECURITY_GET_STATUS, () => ({ encryptionAvailable: isSecureStorageAvailable() }));
+
+  // Toast
+  safeHandle(IPC.TOAST_SHOW, (_e, payload) => {
+    const { message, status } = parseOrThrow(toastShowSchema, payload);
+    showToast(message, status);
+  });
 
   // App
   safeHandle(IPC.APP_GET_INFO, () => ({ version: app.getVersion(), platform: process.platform }));

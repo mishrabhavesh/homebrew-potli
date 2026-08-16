@@ -81,6 +81,19 @@ const api = {
      * navigation, since it (not the main window) is the one that should close. */
     hide: (): Promise<void> => ipcRenderer.invoke(IPC.PANEL_HIDE)
   },
+  security: {
+    /** Whether history (text + saved images) is actually being encrypted at
+     * rest on this machine right now — false means the OS's secure storage
+     * isn't available and content is stored in clearly-marked plaintext. */
+    getStatus: (): Promise<{ encryptionAvailable: boolean }> => ipcRenderer.invoke(IPC.SECURITY_GET_STATUS)
+  },
+  toast: {
+    /** Shows the same small bottom-right confirmation window used for
+     * capture confirmations — a real OS-level window, not something drawn
+     * inside the caller's own window, so it survives that window closing. */
+    show: (message: string, status?: "success" | "error" | "info"): Promise<void> =>
+      ipcRenderer.invoke(IPC.TOAST_SHOW, { message, status })
+  },
   app: {
     getInfo: (): Promise<{ version: string; platform: NodeJS.Platform }> => ipcRenderer.invoke(IPC.APP_GET_INFO),
     quit: (): Promise<void> => ipcRenderer.invoke(IPC.APP_QUIT)

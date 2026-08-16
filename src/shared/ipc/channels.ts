@@ -44,6 +44,12 @@ export const IPC = {
   // Tray quick-access panel (custom floating window, not the native tray menu)
   PANEL_HIDE: "panel:hide",
 
+  // Security
+  SECURITY_GET_STATUS: "security:get-status", // renderer -> main: is history encrypted at rest on this machine?
+
+  // Toast — the small bottom-right confirmation window (see notifications/toastWindow.ts)
+  TOAST_SHOW: "toast:show", // renderer -> main: show it, same one used for capture confirmations
+
   // App info
   APP_GET_INFO: "app:get-info",
   APP_QUIT: "app:quit"

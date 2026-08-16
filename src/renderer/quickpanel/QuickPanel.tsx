@@ -23,7 +23,7 @@ export function QuickPanel() {
   const loadImage = useHistoryStore((s) => s.loadImage);
   const imageUrls = useHistoryStore((s) => s.imageUrls);
   const copyAgain = useHistoryStore((s) => s.copyAgain);
-  const [justCopiedId, setJustCopiedId] = useState<string | null>(null);
+  const [flashId, setFlashId] = useState<string | null>(null);
 
   useTheme(settings.theme);
 
@@ -43,9 +43,24 @@ export function QuickPanel() {
   };
 
   const handleRowClick = async (item: HistoryItem) => {
-    await copyAgain(item.id);
-    setJustCopiedId(item.id);
-    setTimeout(hidePanel, 260);
+    let success = true;
+    try {
+      await copyAgain(item.id);
+      void window.potli.toast.show(item.kind === "text" ? "Text copied" : "Image copied", "success");
+    } catch {
+      // Surface the failure instead of silently doing nothing — a clipboard
+      // write can fail (permissions, another app holding it, etc).
+      success = false;
+      void window.potli.toast.show("Couldn't copy", "error");
+    }
+    // Only flash the row on an actual successful copy — flashing it blue
+    // for a failed attempt would read as a false confirmation. The
+    // confirmation itself now lives in the shared bottom-right toast (same
+    // one capture confirmations use), which persists after this panel
+    // closes, so there's no need to hold the panel open for it anymore.
+    if (success) setFlashId(item.id);
+    setTimeout(() => setFlashId((cur) => (cur === item.id ? null : cur)), 1000);
+    setTimeout(hidePanel, 300);
   };
 
   const openHistory = async () => {
@@ -100,7 +115,7 @@ export function QuickPanel() {
             <PanelRow
               key={item.id}
               item={item}
-              justCopied={justCopiedId === item.id}
+              flashing={flashId === item.id}
               thumbUrl={item.kind === "image" ? imageUrls[item.id] : undefined}
               onLoadImage={() => loadImage(item.id)}
               onClick={() => handleRowClick(item)}
@@ -134,7 +149,7 @@ export function QuickPanel() {
 
 function PanelShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden rounded-xl border border-border-light bg-white/95 text-[13px] text-[#1c1c1e] shadow-panel backdrop-blur-xl dark:border-border-dark dark:bg-[#1c1c1e]/95 dark:text-[#ececef]">
+    <div className="relative flex h-screen w-screen flex-col overflow-hidden rounded-xl border border-border-light bg-white/95 text-[13px] text-[#1c1c1e] shadow-panel backdrop-blur-xl dark:border-border-dark dark:bg-[#1c1c1e]/95 dark:text-[#ececef]">
       {children}
     </div>
   );
@@ -142,13 +157,13 @@ function PanelShell({ children }: { children: React.ReactNode }) {
 
 function PanelRow({
   item,
-  justCopied,
+  flashing,
   thumbUrl,
   onLoadImage,
   onClick
 }: {
   item: HistoryItem;
-  justCopied: boolean;
+  flashing: boolean;
   thumbUrl?: string;
   onLoadImage: () => void;
   onClick: () => void;
@@ -167,7 +182,7 @@ function PanelRow({
     <button
       onClick={onClick}
       className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-100 ${
-        justCopied ? "bg-accent/10" : "hover:bg-black/[0.04] dark:hover:bg-white/[0.05]"
+        flashing ? "animate-row-flash" : "hover:bg-black/[0.04] dark:hover:bg-white/[0.05]"
       }`}
     >
       {item.kind === "image" ? (
@@ -186,11 +201,6 @@ function PanelRow({
           {item.origin === "clipboard" && " · Copied"}
         </p>
       </div>
-      {justCopied && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0 text-accent">
-          <path d="M5 12l5 5 9-10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
     </button>
   );
 }

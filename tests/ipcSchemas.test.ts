@@ -11,6 +11,7 @@ import {
   shortcutSetSchema,
   permissionKindSchema,
   navigateSchema,
+  toastShowSchema,
   parseOrThrow
 } from "../src/shared/ipc/schemas";
 import { DEFAULT_SETTINGS } from "../src/shared/types/settings";
@@ -149,6 +150,31 @@ describe("permissionKindSchema", () => {
 
   it("rejects an unknown permission kind", () => {
     expect(() => permissionKindSchema.parse("camera")).toThrow();
+  });
+});
+
+describe("toastShowSchema", () => {
+  it("accepts a message with an explicit status", () => {
+    expect(toastShowSchema.parse({ message: "Text copied", status: "success" })).toEqual({
+      message: "Text copied",
+      status: "success"
+    });
+  });
+
+  it("defaults status to success when omitted", () => {
+    expect(toastShowSchema.parse({ message: "Text copied" })).toEqual({ message: "Text copied", status: "success" });
+  });
+
+  it("rejects an empty message", () => {
+    expect(() => toastShowSchema.parse({ message: "" })).toThrow();
+  });
+
+  it("rejects an unknown status", () => {
+    expect(() => toastShowSchema.parse({ message: "hi", status: "warning" })).toThrow();
+  });
+
+  it("rejects an overly long message", () => {
+    expect(() => toastShowSchema.parse({ message: "a".repeat(201) })).toThrow();
   });
 });
 

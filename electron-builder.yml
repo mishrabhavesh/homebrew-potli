@@ -1,6 +1,11 @@
 appId: com.potli.app
 productName: Potli
 copyright: Copyright © 2026 Potli
+# Potli doesn't use electron-updater (updates come from re-downloading/`brew
+# upgrade`), so there's no auto-update feed to publish. Without this,
+# electron-builder still tries to generate auto-update channel metadata for
+# some Linux targets and fails when it can't determine a publish provider.
+publish: null
 directories:
   output: release
   buildResources: build

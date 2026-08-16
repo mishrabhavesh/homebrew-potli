@@ -46,12 +46,18 @@ module.exports = {
       keyframes: {
         "fade-in": { from: { opacity: 0 }, to: { opacity: 1 } },
         "fade-up": { from: { opacity: 0, transform: "translateY(4px)" }, to: { opacity: 1, transform: "translateY(0)" } },
-        "toast-in": { from: { opacity: 0, transform: "translateY(6px) scale(0.98)" }, to: { opacity: 1, transform: "translateY(0) scale(1)" } }
+        "toast-in": { from: { opacity: 0, transform: "translateY(6px) scale(0.98)" }, to: { opacity: 1, transform: "translateY(0) scale(1)" } },
+        "row-flash": {
+          "0%": { backgroundColor: "rgba(59, 108, 246, 0.16)" },
+          "65%": { backgroundColor: "rgba(59, 108, 246, 0.16)" },
+          "100%": { backgroundColor: "rgba(59, 108, 246, 0)" }
+        }
       },
       animation: {
         "fade-in": "fade-in 150ms ease-out",
         "fade-up": "fade-up 180ms ease-out",
-        "toast-in": "toast-in 160ms cubic-bezier(0.16, 1, 0.3, 1)"
+        "toast-in": "toast-in 160ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "row-flash": "row-flash 1000ms ease-out"
       }
     }
   },

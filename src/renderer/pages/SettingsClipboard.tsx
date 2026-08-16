@@ -1,8 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSettingsStore } from "../stores/settingsStore";
 
 export function SettingsClipboard() {
   const { settings, update } = useSettingsStore();
+  const [encryptionAvailable, setEncryptionAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    window.potli.security.getStatus().then((status) => setEncryptionAvailable(status.encryptionAvailable));
+  }, []);
 
   return (
     <div className="mx-auto max-w-xl px-8 py-8">
@@ -33,6 +38,16 @@ export function SettingsClipboard() {
           Clipboard history is stored only on this device, exactly like captures — nothing is ever uploaded.
           Turn the toggle above off at any time to stop watching; entries already in History stay until you delete them.
         </p>
+        {encryptionAvailable !== null && (
+          <div className="mt-3 flex items-center gap-2 border-t border-border-light pt-3 dark:border-border-dark">
+            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${encryptionAvailable ? "bg-accent" : "bg-amber-500"}`} />
+            <p className="text-[11.5px] text-[#6b6b70] dark:text-[#9c9ca3]">
+              {encryptionAvailable
+                ? "History is encrypted at rest using this Mac's secure storage — the files on disk aren't readable without it."
+                : "This system's secure storage isn't available, so history is currently stored unencrypted on disk."}
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

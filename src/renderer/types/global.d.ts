@@ -57,6 +57,12 @@ interface PotliApi {
   panel: {
     hide(): Promise<void>;
   };
+  security: {
+    getStatus(): Promise<{ encryptionAvailable: boolean }>;
+  };
+  toast: {
+    show(message: string, status?: "success" | "error" | "info"): Promise<void>;
+  };
   app: {
     getInfo(): Promise<{ version: string; platform: string }>;
     quit(): Promise<void>;

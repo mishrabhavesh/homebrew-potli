@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { HistoryItem, TextHistoryItem, ImageHistoryItem } from "../../shared/types/history";
 import { HISTORY_LIMIT } from "../../shared/constants";
 import { saveHistoryImage, deleteHistoryImage } from "./historyImageStore";
+import { encryptText, decryptText } from "../security/secureStorage";
 import { logger } from "../logger";
 
 interface HistorySchema {
@@ -32,7 +33,20 @@ class HistoryStore {
   constructor() {
     this.store = new Store<HistorySchema>({
       name: "history",
-      defaults: { items: [] }
+      defaults: { items: [] },
+      // Encrypt the on-disk JSON at rest (see secureStorage.ts) — a plain
+      // `cat history.json` on this machine shows ciphertext, not clipboard
+      // history. deserialize also transparently reads pre-encryption files.
+      serialize: (value) => encryptText(JSON.stringify(value)),
+      deserialize: (text) => {
+        if (!text) return { items: [] };
+        try {
+          return JSON.parse(decryptText(text));
+        } catch (error) {
+          logger.warn("Could not read history store — starting fresh", { error: String(error) });
+          return { items: [] };
+        }
+      }
     });
   }
 

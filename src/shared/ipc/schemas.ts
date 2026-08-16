@@ -17,6 +17,13 @@ export const shortcutIdSchema = z.enum(["extractText", "copyImage"]);
 
 export const captureModeSchema = z.enum(["text", "image"]);
 
+export const toastStatusSchema = z.enum(["success", "error", "info"]);
+
+export const toastShowSchema = z.object({
+  message: z.string().min(1).max(200),
+  status: toastStatusSchema.default("success")
+});
+
 export const appSettingsSchema = z.object({
   shortcut: z.string().min(1).max(64),
   imageShortcut: z.string().min(1).max(64),

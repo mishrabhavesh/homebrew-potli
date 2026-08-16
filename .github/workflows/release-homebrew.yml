@@ -1,0 +1,181 @@
+name: Release (macOS, Linux) & publish to Homebrew
+
+# Fires on every push to main, but the actual build/release only runs when
+# package.json's version doesn't already have a matching GitHub release —
+# i.e. only on commits that bump the version number. A plain push to main
+# (docs, refactors, etc.) is a fast no-op: one quick job, no builds.
+#
+# To ship a new version: bump "version" in package.json, commit, push to
+# main. CI takes it from there — builds the unsigned macOS DMGs and Linux
+# .deb/AppImage packages, publishes a GitHub Release with all of them
+# attached, and updates the Homebrew tap so `brew upgrade --cask potli`
+# picks it up. (There's no hosted APT repo yet — see the README's "Linux
+# packaging roadmap" section — so Linux users install the .deb/AppImage
+# straight from the release for now.)
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if gh release view "v$VERSION" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release v$VERSION already exists — skipping build."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release for v$VERSION yet — will build and publish."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-release:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    # Apple Silicon GitHub-hosted runner. electron-builder's mac target packages
+    # BOTH arm64 and x64 DMGs from this single host in one `--mac` invocation —
+    # the same thing that happens when building locally on an M-series Mac —
+    # so no separate Intel runner/matrix is needed.
+    runs-on: macos-14
+    outputs:
+      arm_sha256: ${{ steps.checksums.outputs.arm_sha256 }}
+      intel_sha256: ${{ steps.checksums.outputs.intel_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build & package (unsigned)
+        env:
+          # No Apple Developer identity exists on this runner — tell
+          # electron-builder not to go looking for one so it produces a
+          # plain unsigned build instead of failing/hanging on discovery.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run package:mac
+
+      - name: Compute checksums
+        id: checksums
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          ARM_DMG="release/Potli-${VERSION}-arm64.dmg"
+          INTEL_DMG="release/Potli-${VERSION}.dmg"
+          if [ ! -f "$ARM_DMG" ] || [ ! -f "$INTEL_DMG" ]; then
+            echo "Expected DMGs not found in release/:"
+            ls -la release/ || true
+            exit 1
+          fi
+          ARM_SHA=$(shasum -a 256 "$ARM_DMG" | awk '{print $1}')
+          INTEL_SHA=$(shasum -a 256 "$INTEL_DMG" | awk '{print $1}')
+          echo "arm_sha256=$ARM_SHA" >> "$GITHUB_OUTPUT"
+          echo "intel_sha256=$INTEL_SHA" >> "$GITHUB_OUTPUT"
+          echo "arm64:  $ARM_SHA"
+          echo "intel:  $INTEL_SHA"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          gh release create "v$VERSION" \
+            "release/Potli-${VERSION}-arm64.dmg" \
+            "release/Potli-${VERSION}.dmg" \
+            --repo "${{ github.repository }}" \
+            --title "Potli v$VERSION" \
+            --notes "Automated release from main. Unsigned build — see the tap README for the one-time Gatekeeper step after installing."
+
+  build-and-attach-linux:
+    needs: [check-version, build-and-release]
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Packages BOTH x64 and arm64 .deb + AppImage from this one x64 runner —
+      # electron-builder doesn't need to execute the target arch to package it,
+      # only to zip/repack prebuilt Electron binaries for it.
+      - run: npm run package:linux
+
+      - name: Attach Linux assets to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          shopt -s nullglob
+          ASSETS=(release/*.deb release/*.AppImage)
+          if [ ${#ASSETS[@]} -eq 0 ]; then
+            echo "No .deb/.AppImage files found in release/:"
+            ls -la release/ || true
+            exit 1
+          fi
+          echo "Uploading: ${ASSETS[*]}"
+          # --clobber in case this step is re-run after a partial failure.
+          gh release upload "v$VERSION" "${ASSETS[@]}" --repo "${{ github.repository }}" --clobber
+
+  update-tap:
+    needs: [check-version, build-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo (for the update script)
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - name: Checkout the homebrew-potli tap
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/homebrew-potli
+          # A fine-grained PAT scoped to homebrew-potli with Contents:
+          # read/write — GITHUB_TOKEN can't push to a different repo.
+          # See CI_CD_SETUP.md for how to create/add this secret.
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Update the cask with the new version + checksums
+        run: |
+          node main/scripts/update-cask.js \
+            "tap/Casks/potli.rb" \
+            "${{ needs.check-version.outputs.version }}" \
+            "${{ needs.build-and-release.outputs.arm_sha256 }}" \
+            "${{ needs.build-and-release.outputs.intel_sha256 }}"
+
+      - name: Commit & push the tap
+        working-directory: tap
+        run: |
+          git config user.name "potli-release-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Cask already up to date — nothing to commit."
+            exit 0
+          fi
+          git add Casks/potli.rb
+          git commit -m "potli ${{ needs.check-version.outputs.version }}"
+          git push
