@@ -8,10 +8,12 @@ name: Release (macOS, Linux) & publish to Homebrew + APT
 # To ship a new version: bump "version" in package.json, commit, push to
 # main. CI takes it from there — builds the unsigned macOS DMGs and Linux
 # .deb/AppImage packages, publishes a GitHub Release with all of them
-# attached, updates the Homebrew tap so `brew upgrade --cask potli` picks it
-# up, and rebuilds + re-signs the apt-potli repo so `sudo apt upgrade` picks
-# it up too. See CI_CD_SETUP.md for the one-time setup both of the latter
-# two need (a PAT per tap repo, plus a GPG signing key for APT).
+# attached, updates Casks/potli.rb in THIS repo (which doubles as both the
+# app source and the Homebrew tap — it's named homebrew-potli, which is all
+# Homebrew requires) so `brew upgrade --cask potli` picks it up, and
+# rebuilds + re-signs the separate apt-potli repo so `sudo apt upgrade`
+# picks it up too. See CI_CD_SETUP.md for the one-time setup the APT side
+# needs (a PAT + a GPG signing key) — Homebrew needs no extra setup at all.
 on:
   push:
     branches: [main]
@@ -204,20 +206,14 @@ jobs:
     needs: [check-version, build-and-release]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout this repo (for the update script)
-        uses: actions/checkout@v4
-        with:
-          path: main
-
-      - name: Checkout the homebrew-potli tap
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/homebrew-potli
-          # A fine-grained PAT scoped to homebrew-potli with Contents:
-          # read/write — GITHUB_TOKEN can't push to a different repo.
-          # See CI_CD_SETUP.md for how to create/add this secret.
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: tap
+      # This repo IS the Homebrew tap (it's named homebrew-potli, and Homebrew
+      # only cares that Casks/potli.rb exists somewhere in it — it doesn't
+      # need a repo containing nothing else). So there's no second repo to
+      # check out here, and no separate PAT needed: GITHUB_TOKEN can already
+      # push back to the same repo the workflow is running in, given the
+      # `permissions: contents: write` above. GITHUB_TOKEN-authored pushes
+      # also don't retrigger `on: push` workflows, so this can't loop.
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
@@ -225,21 +221,20 @@ jobs:
 
       - name: Update the cask with the new version + checksums
         run: |
-          node main/scripts/update-cask.js \
-            "tap/Casks/potli.rb" \
+          node scripts/update-cask.js \
+            "Casks/potli.rb" \
             "${{ needs.check-version.outputs.version }}" \
             "${{ needs.build-and-release.outputs.arm_sha256 }}" \
             "${{ needs.build-and-release.outputs.intel_sha256 }}"
 
-      - name: Commit & push the tap
-        working-directory: tap
+      - name: Commit & push
         run: |
           git config user.name "potli-release-bot"
           git config user.email "actions@users.noreply.github.com"
-          if git diff --quiet; then
+          git add Casks/potli.rb
+          if git diff --cached --quiet; then
             echo "Cask already up to date — nothing to commit."
             exit 0
           fi
-          git add Casks/potli.rb
           git commit -m "potli ${{ needs.check-version.outputs.version }}"
           git push
