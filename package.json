@@ -1,7 +1,7 @@
 {
   "name": "potli",
   "productName": "Potli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Press a shortcut, select any area of your screen, and the text is instantly copied. Local OCR, zero cloud, premium feel.",
   "author": {
     "name": "Potli",
