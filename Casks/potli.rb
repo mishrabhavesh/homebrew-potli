@@ -1,9 +1,9 @@
 cask "potli" do
   arch arm: "-arm64", intel: ""
 
-  version "0.1.0"
-  sha256 arm:   "0000000000000000000000000000000000000000000000000000000000000",
-         intel: "0000000000000000000000000000000000000000000000000000000000000"
+  version "0.2.1"
+  sha256 arm:   "895a7597d2dab71edb3de1390d9a4538ef24e28c237ef943648e29d893b83a04",
+         intel: "dc57a31c0d50f62e9cb791cb491ea1d4b2a25198c3b75b131bc55d15dcc59568"
 
   url "https://github.com/mishrabhavesh/homebrew-potli/releases/download/v#{version}/Potli-#{version}#{arch}.dmg"
   name "Potli"
