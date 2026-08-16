@@ -37,7 +37,7 @@ export function Sidebar() {
             <path d="M8 12h8M8 8h5M8 16h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
         </div>
-        <span className="text-[13px] font-semibold tracking-tight">CopyClip</span>
+        <span className="text-[13px] font-semibold tracking-tight">Potli</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-4 overflow-y-auto">

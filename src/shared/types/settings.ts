@@ -39,7 +39,7 @@ export interface AppSettings {
   preferredOcrEngine: OcrEngineId | "auto";
   /** Play a subtle sound on successful capture */
   soundEnabled: boolean;
-  /** Whether CopyClip watches the system clipboard for any copy/cut — not just
+  /** Whether Potli watches the system clipboard for any copy/cut — not just
    * its own captures — and adds it to History automatically. Content flagged
    * "concealed"/"transient" by password managers (1Password, Bitwarden, etc.)
    * is always skipped regardless of this setting. */

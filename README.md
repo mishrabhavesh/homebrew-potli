@@ -1,8 +1,8 @@
-# CopyClip
+# Potli
 
 Press a shortcut. Select text on screen. It's copied.
 
-CopyClip is a cross-platform (macOS / Windows / Linux) background utility built with
+Potli is a cross-platform (macOS / Windows / Linux) background utility built with
 Electron, TypeScript, React, and Vite. The entire OCR pipeline runs locally — nothing
 is ever uploaded, and no screenshot is written permanently to disk.
 
@@ -124,7 +124,7 @@ call.
 `contextIsolation: true`, `nodeIntegration: false`, and `sandbox: true` are set on
 every `BrowserWindow` (main window, per-display selection overlays, and the toast
 window). The preload script (`src/main/preload.ts`) exposes a narrow, fully-typed
-`window.copyclip` API — nothing else from Node/Electron is reachable from web
+`window.potli` API — nothing else from Node/Electron is reachable from web
 content. Every IPC payload is re-validated on the main-process side with zod
 (`src/shared/ipc/schemas.ts`) before it touches any handler logic, so a compromised
 or buggy renderer can't smuggle malformed data across the boundary.
@@ -220,9 +220,9 @@ black-on-transparent — macOS auto-tints template images) and `resources/trayIc
 - **Screen Recording** permission is required for screenshot capture; **Accessibility**
   is only needed if "Copy and paste automatically" is turned on. Both are explained,
   with a direct link to the relevant System Settings pane, in Settings → Permissions —
-  CopyClip never asks for a permission it doesn't need yet.
+  Potli never asks for a permission it doesn't need yet.
 - OCR uses Apple's Vision framework via a bundled Swift helper. If the Xcode Command
-  Line Tools aren't installed, CopyClip automatically falls back to Tesseract.
+  Line Tools aren't installed, Potli automatically falls back to Tesseract.
 
 ### Windows
 
@@ -243,7 +243,7 @@ black-on-transparent — macOS auto-tints template images) and `resources/trayIc
   yet — the `OcrEngine` interface is ready for one, see below).
 - "Copy and paste automatically" uses `xdotool`, which works on X11. Wayland
   compositors generally block synthetic input for security reasons; if the paste
-  keystroke can't be sent, CopyClip still leaves the text on the clipboard and shows
+  keystroke can't be sent, Potli still leaves the text on the clipboard and shows
   a "Text copied" toast rather than failing silently.
 
 ---

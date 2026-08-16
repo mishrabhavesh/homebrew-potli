@@ -1,7 +1,7 @@
 /**
  * A history entry is one of two kinds — "text" or "image" — and comes from one
- * of two origins: an explicit CopyClip capture ("Extract Text" / "Copy as
- * Image"), or CopyClip's passive clipboard watcher noticing a plain Cmd+C /
+ * of two origins: an explicit Potli capture ("Extract Text" / "Copy as
+ * Image"), or Potli's passive clipboard watcher noticing a plain Cmd+C /
  * Cmd+X somewhere else on the system. Both origins share one chronological,
  * mixed timeline so History is a single place to look, but the UI marks which
  * is which so it's never confusing where an entry came from.

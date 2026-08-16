@@ -1,4 +1,4 @@
-# Sharing CopyClip as a downloadable Mac app
+# Sharing Potli as a downloadable Mac app
 
 ## 1. Build it
 
@@ -12,8 +12,8 @@ npm run package:mac
 
 This produces, inside `release/`:
 
-- `CopyClip-<version>-arm64.dmg` — for Apple Silicon Macs (M1/M2/M3/M4)
-- `CopyClip-<version>-x64.dmg` — for Intel Macs
+- `Potli-<version>-arm64.dmg` — for Apple Silicon Macs (M1/M2/M3/M4)
+- `Potli-<version>-x64.dmg` — for Intel Macs
 - matching `.zip` files (useful for auto-update tooling later; you can ignore these for now)
 
 Each `.dmg` already opens as the classic "drag the app icon onto the Applications
@@ -28,7 +28,7 @@ If you're not sure which Mac someone has, send them both `.dmg` files, or just t
 You don't have an Apple Developer Program account ($99/year), so this build is
 **unsigned**. macOS Gatekeeper checks every downloaded app against Apple's
 notarization service, and an unsigned app fails that check — this is the exact
-"CopyClip is damaged and can't be opened" / "malware blocked" dialog you ran into
+"Potli is damaged and can't be opened" / "malware blocked" dialog you ran into
 earlier with your own dev build. It's not a bug in the app; it's macOS being
 cautious about software with no verified publisher. **Every recipient will hit
 this**, not just you.
@@ -45,18 +45,18 @@ the app.
 Include this alongside the download link — most people will otherwise assume
 the app is broken or malicious and give up.
 
-> **First time opening CopyClip:**
-> 1. Open the `.dmg` and drag **CopyClip** into **Applications**.
+> **First time opening Potli:**
+> 1. Open the `.dmg` and drag **Potli** into **Applications**.
 > 2. Don't double-click it yet — instead, open **Applications** in Finder,
->    **right-click (or Control-click) CopyClip**, and choose **Open**.
+>    **right-click (or Control-click) Potli**, and choose **Open**.
 > 3. A dialog will appear warning it's from an unidentified developer — click
 >    **Open** again. This confirmation is only needed the first time.
 >
-> If instead you see **"CopyClip is damaged and can't be opened"**, that's
+> If instead you see **"Potli is damaged and can't be opened"**, that's
 > Gatekeeper's quarantine flag on the download, not actual damage. Open
 > **Terminal** and run:
 > ```
-> xattr -cr /Applications/CopyClip.app
+> xattr -cr /Applications/Potli.app
 > ```
 > Then try opening it again as in step 2.
 

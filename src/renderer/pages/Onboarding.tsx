@@ -15,7 +15,7 @@ export function Onboarding({ onFinish }: { onFinish: () => void }) {
   const requestScreenRecording = async () => {
     setRequestingScreen(true);
     try {
-      const snapshot = await window.copyclip.permissions.request("screen-recording");
+      const snapshot = await window.potli.permissions.request("screen-recording");
       setScreenGranted(snapshot.screenRecording === "granted");
     } finally {
       setRequestingScreen(false);
@@ -38,7 +38,10 @@ export function Onboarding({ onFinish }: { onFinish: () => void }) {
                 <path d="M8 12h8M8 8h5M8 16h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </div>
-            <h1 className="text-[20px] font-semibold tracking-tight">Extract text from anywhere.</h1>
+            <p className="text-[13px] font-medium text-[#6b6b70] dark:text-[#9c9ca3]">
+              Potli — Your little bundle of everything you copy.
+            </p>
+            <h1 className="mt-3 text-[20px] font-semibold tracking-tight">Extract text from anywhere.</h1>
             <p className="mt-2.5 text-[13px] leading-relaxed text-[#6b6b70] dark:text-[#9c9ca3]">
               Take any text on your screen and copy it instantly.
             </p>
@@ -72,7 +75,7 @@ export function Onboarding({ onFinish }: { onFinish: () => void }) {
               <br />
               No screenshots are uploaded.
               <br />
-              CopyClip also keeps a local history of things you copy — password managers are automatically excluded, and you can turn this off anytime in Settings → Clipboard.
+              Potli also keeps a local history of things you copy — password managers are automatically excluded, and you can turn this off anytime in Settings → Clipboard.
             </p>
             {platform === "darwin" && (
               <button

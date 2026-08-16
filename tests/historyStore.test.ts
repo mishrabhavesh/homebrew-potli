@@ -22,7 +22,7 @@ vi.mock("electron-store", () => ({ default: FakeStore }));
 // image files live — point it at a throwaway temp directory so these tests
 // exercise real file writes/deletes without touching the real userData dir
 // (and without needing the real Electron runtime, which isn't available here).
-const testUserDataDir = path.join(os.tmpdir(), `copyclip-history-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+const testUserDataDir = path.join(os.tmpdir(), `potli-history-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 vi.mock("electron", () => ({
   app: { getPath: () => testUserDataDir }
 }));

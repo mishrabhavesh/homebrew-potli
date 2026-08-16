@@ -20,7 +20,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "src/renderer/index.html"),
-        overlay: path.resolve(__dirname, "src/renderer/overlay/overlay.html")
+        overlay: path.resolve(__dirname, "src/renderer/overlay/overlay.html"),
+        quickpanel: path.resolve(__dirname, "src/renderer/quickpanel/quickpanel.html")
       }
     }
   },

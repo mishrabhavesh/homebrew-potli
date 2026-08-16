@@ -38,7 +38,7 @@ const fakeClipboard = {
 
 vi.mock("electron", () => ({
   clipboard: fakeClipboard,
-  app: { getPath: () => "/tmp/copyclip-clipboard-watcher-test" }
+  app: { getPath: () => "/tmp/potli-clipboard-watcher-test" }
 }));
 
 const { settingsStore } = await import("../src/main/settings/settingsStore");
@@ -107,17 +107,17 @@ describe("clipboardWatcher", () => {
     expect(historyStore.getAll()).toHaveLength(0);
   });
 
-  it("skips a write CopyClip itself just made, avoiding a duplicate entry", async () => {
-    noteProgrammaticWrite("text", "written by copyclip");
-    setClipboardText("written by copyclip");
+  it("skips a write Potli itself just made, avoiding a duplicate entry", async () => {
+    noteProgrammaticWrite("text", "written by potli");
+    setClipboardText("written by potli");
     await checkClipboardOnce();
 
     expect(historyStore.getAll()).toHaveLength(0);
   });
 
   it("still adds a later, genuinely different clipboard change after suppressing a programmatic write", async () => {
-    noteProgrammaticWrite("text", "written by copyclip");
-    setClipboardText("written by copyclip");
+    noteProgrammaticWrite("text", "written by potli");
+    setClipboardText("written by potli");
     await checkClipboardOnce();
     expect(historyStore.getAll()).toHaveLength(0);
 

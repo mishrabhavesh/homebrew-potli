@@ -25,7 +25,7 @@ export function SelectionOverlay({ displayId, isActive, mode }: { displayId: num
   const containerRef = useRef<HTMLDivElement>(null);
 
   const cancel = useCallback(() => {
-    window.copyclip.capture.cancel();
+    window.potli.capture.cancel();
   }, []);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function SelectionOverlay({ displayId, isActive, mode }: { displayId: num
       return;
     }
 
-    await window.copyclip.capture.regionSelected({
+    await window.potli.capture.regionSelected({
       x: Math.round(rect.x),
       y: Math.round(rect.y),
       width: Math.round(rect.width),

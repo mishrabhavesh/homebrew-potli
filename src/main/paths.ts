@@ -23,6 +23,10 @@ export function overlayHtmlPath(): string {
   return path.join(APP_ROOT, "dist", "renderer", "overlay", "overlay.html");
 }
 
+export function quickPanelHtmlPath(): string {
+  return path.join(APP_ROOT, "dist", "renderer", "quickpanel", "quickpanel.html");
+}
+
 /** Bundled non-JS resources (Swift/PowerShell OCR helpers, icons). Packaged builds
  * copy `resources/` to `process.resourcesPath` via electron-builder's `extraResources`. */
 export function bundledResourcesPath(): string {

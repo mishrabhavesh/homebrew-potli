@@ -10,7 +10,7 @@ import { randomUUID } from "node:crypto";
  * then delete it immediately — per spec §18, screenshots are never persisted.
  */
 export async function withTempImageFile<T>(image: Buffer, fn: (filePath: string) => Promise<T>): Promise<T> {
-  const filePath = path.join(os.tmpdir(), `copyclip-${randomUUID()}.png`);
+  const filePath = path.join(os.tmpdir(), `potli-${randomUUID()}.png`);
   await fs.writeFile(filePath, image);
   try {
     return await fn(filePath);

@@ -38,7 +38,7 @@ export function SettingsAppearance() {
       <section className="panel mt-4 flex items-center justify-between p-5">
         <div>
           <p className="text-[13px] font-medium">Start at login</p>
-          <p className="mt-0.5 text-[12px] text-[#9c9ca3]">Launch CopyClip automatically when you sign in.</p>
+          <p className="mt-0.5 text-[12px] text-[#9c9ca3]">Launch Potli automatically when you sign in.</p>
         </div>
         <Toggle checked={settings.startAtLogin} onChange={(v) => update({ startAtLogin: v })} />
       </section>

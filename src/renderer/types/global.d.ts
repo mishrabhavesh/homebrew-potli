@@ -17,7 +17,7 @@ interface PermissionsSnapshot {
   platform: string;
 }
 
-interface CopyClipApi {
+interface PotliApi {
   settings: {
     get(): Promise<AppSettings>;
     set(partial: Partial<AppSettings>): Promise<AppSettings>;
@@ -54,6 +54,9 @@ interface CopyClipApi {
     close(): Promise<void>;
     onNavigate(cb: (route: string) => void): () => void;
   };
+  panel: {
+    hide(): Promise<void>;
+  };
   app: {
     getInfo(): Promise<{ version: string; platform: string }>;
     quit(): Promise<void>;
@@ -62,7 +65,7 @@ interface CopyClipApi {
 
 declare global {
   interface Window {
-    copyclip: CopyClipApi;
+    potli: PotliApi;
   }
 }
 

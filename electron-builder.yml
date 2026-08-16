@@ -1,6 +1,6 @@
-appId: com.copyclip.app
-productName: CopyClip
-copyright: Copyright © 2026 CopyClip
+appId: com.potli.app
+productName: Potli
+copyright: Copyright © 2026 Potli
 directories:
   output: release
   buildResources: build
@@ -26,8 +26,8 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
-    NSScreenCaptureUsageDescription: CopyClip needs Screen Recording access to capture the area of your screen you select for text extraction.
-    NSAppleEventsUsageDescription: CopyClip uses this to paste extracted text into your current app when "Copy and paste automatically" is enabled.
+    NSScreenCaptureUsageDescription: Potli needs Screen Recording access to capture the area of your screen you select for text extraction.
+    NSAppleEventsUsageDescription: Potli uses this to paste extracted text into your current app when "Copy and paste automatically" is enabled.
     LSUIElement: true
 
 dmg:
@@ -62,7 +62,7 @@ linux:
       arch: [x64, arm64]
   desktop:
     entry:
-      Name: CopyClip
+      Name: Potli
       Comment: Press a shortcut, select text on screen, it's copied.
       Categories: Utility;
 

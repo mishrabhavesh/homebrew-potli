@@ -2,6 +2,7 @@ import { clipboard } from "electron";
 import { createHash } from "node:crypto";
 import { historyStore } from "../history/historyStore";
 import { settingsStore } from "../settings/settingsStore";
+import { looksLikeTechnicalNoise } from "../../shared/format/looksLikeTechnicalNoise";
 import { logger } from "../logger";
 
 const POLL_INTERVAL_MS = 900;
@@ -10,7 +11,7 @@ const POLL_INTERVAL_MS = 900;
  * Pasteboard/format markers a well-behaved clipboard manager is expected to
  * honor. Password managers (1Password, Bitwarden, Dashlane, ...) and macOS's
  * own passkey/password autofill declare one of these alongside sensitive
- * content specifically so tools like CopyClip skip it — this is the standard
+ * content specifically so tools like Potli skip it — this is the standard
  * "org.nspasteboard" convention on macOS, plus KeePass's older Windows
  * convention. We check for these on every poll before touching the content.
  */
@@ -23,8 +24,8 @@ const CONCEALED_FORMAT_MARKERS = [
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let lastSignature: string | null = null;
-/** Signature of the last write CopyClip itself made to the clipboard — used to
- * skip re-adding CopyClip's own capture/re-copy writes as a second, redundant
+/** Signature of the last write Potli itself made to the clipboard — used to
+ * skip re-adding Potli's own capture/re-copy writes as a second, redundant
  * "clipboard" history entry (see clipboardService.ts). */
 let suppressSignature: string | null = null;
 
@@ -32,7 +33,7 @@ function signatureFor(kind: "text" | "image", data: string | Buffer): string {
   return createHash("sha1").update(kind).update(data).digest("hex");
 }
 
-/** Called by clipboardService right after CopyClip writes to the clipboard itself. */
+/** Called by clipboardService right after Potli writes to the clipboard itself. */
 export function noteProgrammaticWrite(kind: "text" | "image", data: string | Buffer): void {
   suppressSignature = signatureFor(kind, data);
 }
@@ -81,6 +82,7 @@ export async function checkClipboardOnce(): Promise<void> {
         suppressSignature = null;
         return;
       }
+      if (looksLikeTechnicalNoise(text)) return;
       await historyStore.addText({
         text,
         rawText: text,

@@ -16,8 +16,9 @@ export function About() {
           </svg>
         </div>
         <div>
-          <p className="text-[14px] font-semibold">CopyClip</p>
-          <p className="text-[12px] text-[#9c9ca3]">
+          <p className="text-[14px] font-semibold">Potli</p>
+          <p className="text-[12px] text-[#9c9ca3]">Your little bundle of everything you copy.</p>
+          <p className="mt-1 text-[11px] text-[#9c9ca3]">
             Version {appVersion} · {platformLabel(platform)}
           </p>
         </div>
@@ -26,7 +27,7 @@ export function About() {
       <section className="panel mt-4 p-5">
         <p className="text-[13px] font-medium">Your screenshots stay on your device.</p>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#6b6b70] dark:text-[#9c9ca3]">
-          CopyClip performs OCR entirely on-device using your operating system&rsquo;s native recognition where available,
+          Potli performs OCR entirely on-device using your operating system&rsquo;s native recognition where available,
           with a local fallback engine everywhere else. Nothing is uploaded, nothing is sent to a server, and no
           screenshot is ever written permanently to disk.
         </p>

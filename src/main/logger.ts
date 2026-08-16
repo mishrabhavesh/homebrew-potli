@@ -4,7 +4,7 @@
  * not content.
  */
 
-const PREFIX = "[CopyClip]";
+const PREFIX = "[Potli]";
 
 export const logger = {
   info(message: string, meta?: Record<string, unknown>): void {

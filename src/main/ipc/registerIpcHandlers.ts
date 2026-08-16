@@ -30,6 +30,7 @@ import {
   requestScreenRecordingAccess
 } from "../permissions/permissionsService";
 import { getMainWindow, showMainWindow } from "../windows/mainWindow";
+import { getQuickPanelWindow, hideQuickPanel } from "../windows/quickPanelWindow";
 import { logger } from "../logger";
 
 /** Wraps a handler so any thrown error becomes a clean IPC rejection with a
@@ -50,6 +51,13 @@ export function registerIpcHandlers(): void {
   safeHandle(IPC.SETTINGS_GET, () => settingsStore.getAll());
   safeHandle(IPC.SETTINGS_SET, (_e, payload) => {
     const partial = parseOrThrow(partialSettingsSchema, payload);
+    // Keep the live global-shortcut registration in sync whenever this field
+    // is part of the update — settings-only writes (e.g. from the Settings
+    // page or the quick panel's pause button) must actually pause/resume the
+    // shortcuts, not just persist the flag.
+    if (partial.shortcutPaused !== undefined) {
+      shortcutManager.setPaused(partial.shortcutPaused);
+    }
     return settingsStore.update(partial);
   });
 
@@ -144,6 +152,9 @@ export function registerIpcHandlers(): void {
   safeHandle(IPC.WINDOW_MINIMIZE, () => getMainWindow()?.minimize());
   safeHandle(IPC.WINDOW_CLOSE, () => getMainWindow()?.close());
 
+  // Tray quick-access panel
+  safeHandle(IPC.PANEL_HIDE, () => hideQuickPanel());
+
   // App
   safeHandle(IPC.APP_GET_INFO, () => ({ version: app.getVersion(), platform: process.platform }));
   safeHandle(IPC.APP_QUIT, () => {
@@ -151,11 +162,13 @@ export function registerIpcHandlers(): void {
     app.quit();
   });
 
-  // Push settings/history changes to every renderer that's listening.
-  settingsStore.onChange((settings) => {
-    getMainWindow()?.webContents.send(IPC.SETTINGS_CHANGED, settings);
-  });
-  historyStore.onChange((items) => {
-    getMainWindow()?.webContents.send(IPC.HISTORY_CHANGED, items);
-  });
+  // Push settings/history changes to every renderer that's listening — the
+  // main app window and the tray quick-access panel both stay live-updated.
+  function broadcast(channel: string, payload: unknown): void {
+    for (const win of [getMainWindow(), getQuickPanelWindow()]) {
+      if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
+    }
+  }
+  settingsStore.onChange((settings) => broadcast(IPC.SETTINGS_CHANGED, settings));
+  historyStore.onChange((items) => broadcast(IPC.HISTORY_CHANGED, items));
 }

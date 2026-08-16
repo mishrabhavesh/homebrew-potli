@@ -1,9 +1,9 @@
 {
-  "name": "copyclip",
-  "productName": "CopyClip",
+  "name": "potli",
+  "productName": "Potli",
   "version": "0.1.0",
   "description": "Press a shortcut, select any area of your screen, and the text is instantly copied. Local OCR, zero cloud, premium feel.",
-  "author": "CopyClip",
+  "author": "Potli",
   "license": "UNLICENSED",
   "private": true,
   "main": "dist/main/index.js",

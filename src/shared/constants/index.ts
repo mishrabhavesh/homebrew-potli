@@ -1,4 +1,4 @@
-export const APP_NAME = "CopyClip";
+export const APP_NAME = "Potli";
 
 export const MAIN_WINDOW_DEFAULT_SIZE = { width: 960, height: 640 };
 export const MAIN_WINDOW_MIN_SIZE = { width: 780, height: 520 };

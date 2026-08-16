@@ -12,7 +12,7 @@ export function QuickCapture() {
   const [justTriggered, setJustTriggered] = useState(false);
 
   useEffect(() => {
-    const off = window.copyclip.capture.onResult((result) => {
+    const off = window.potli.capture.onResult((result) => {
       if (result.ok) {
         setJustTriggered(true);
         setTimeout(() => setJustTriggered(false), 1400);
@@ -31,8 +31,8 @@ export function QuickCapture() {
   }, [mostRecent?.id, mostRecent?.kind]);
 
   const startCapture = async (mode: "text" | "image") => {
-    await window.copyclip.window.minimize();
-    await window.copyclip.capture.start(mode);
+    await window.potli.window.minimize();
+    await window.potli.capture.start(mode);
   };
 
   return (

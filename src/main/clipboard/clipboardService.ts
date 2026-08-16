@@ -8,7 +8,7 @@ import { noteProgrammaticWrite } from "./clipboardWatcher";
  * to add safety behavior later (e.g. clearing sensitive clipboard entries).
  *
  * Every write also tells clipboardWatcher what was just written, so the
- * passive clipboard watcher doesn't turn CopyClip's own capture/re-copy
+ * passive clipboard watcher doesn't turn Potli's own capture/re-copy
  * writes into a second, redundant "clipboard" history entry.
  *
  * Per spec §18: never log clipboard contents.

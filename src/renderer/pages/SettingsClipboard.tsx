@@ -12,7 +12,7 @@ export function SettingsClipboard() {
         <div className="pr-4">
           <p className="text-[13px] font-medium">Watch clipboard for copies</p>
           <p className="mt-0.5 text-[12px] leading-relaxed text-[#9c9ca3]">
-            When on, anything you copy or cut anywhere — not just CopyClip captures — is added to History
+            When on, anything you copy or cut anywhere — not just Potli captures — is added to History
             automatically, so it&rsquo;s there if you need it again.
           </p>
         </div>
@@ -22,8 +22,8 @@ export function SettingsClipboard() {
       <section className="panel mt-4 p-5">
         <p className="text-[13px] font-medium">What gets skipped</p>
         <ul className="mt-2.5 flex flex-col gap-2">
-          <InfoRow text="Content marked private by password managers (1Password, Bitwarden, and similar) — this is a standard convention those apps use to opt out of clipboard managers, and CopyClip always respects it." />
-          <InfoRow text="Anything CopyClip itself just copied — capturing text or an image doesn't create a duplicate entry." />
+          <InfoRow text="Content marked private by password managers (1Password, Bitwarden, and similar) — this is a standard convention those apps use to opt out of clipboard managers, and Potli always respects it." />
+          <InfoRow text="Anything Potli itself just copied — capturing text or an image doesn't create a duplicate entry." />
         </ul>
       </section>
 

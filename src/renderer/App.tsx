@@ -27,7 +27,7 @@ export default function App() {
   useEffect(() => {
     load();
     loadHistory();
-    window.copyclip.app.getInfo().then(setAppInfo);
+    window.potli.app.getInfo().then(setAppInfo);
   }, []);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-check when `loaded` flips
@@ -39,7 +39,11 @@ export default function App() {
 
   if (!loaded) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-canvas-light dark:bg-canvas-dark">
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-canvas-light dark:bg-canvas-dark">
+        <div className="text-center animate-fade-in">
+          <p className="text-[15px] font-semibold tracking-tight">Potli</p>
+          <p className="mt-1 text-[12px] text-[#9c9ca3]">Your little bundle of everything you copy.</p>
+        </div>
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent opacity-40" />
       </div>
     );

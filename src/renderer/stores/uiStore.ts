@@ -27,8 +27,8 @@ export const useUiStore = create<UiState>((set) => ({
   setAppInfo: ({ platform, version }) => set({ platform, appVersion: version })
 }));
 
-if (typeof window !== "undefined" && window.copyclip) {
-  window.copyclip.window.onNavigate((route) => {
+if (typeof window !== "undefined" && window.potli) {
+  window.potli.window.onNavigate((route) => {
     useUiStore.getState().setRoute(route as Route);
   });
 }

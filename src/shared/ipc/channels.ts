@@ -41,6 +41,9 @@ export const IPC = {
   WINDOW_MINIMIZE: "window:minimize",
   WINDOW_CLOSE: "window:close",
 
+  // Tray quick-access panel (custom floating window, not the native tray menu)
+  PANEL_HIDE: "panel:hide",
+
   // App info
   APP_GET_INFO: "app:get-info",
   APP_QUIT: "app:quit"

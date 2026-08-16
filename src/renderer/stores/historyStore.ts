@@ -19,25 +19,25 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   loaded: false,
   imageUrls: {},
   load: async () => {
-    const items = await window.copyclip.history.getAll();
+    const items = await window.potli.history.getAll();
     set({ items, loaded: true });
   },
   remove: async (id) => {
     set({ items: get().items.filter((i) => i.id !== id) });
-    await window.copyclip.history.delete(id);
+    await window.potli.history.delete(id);
   },
   clear: async () => {
     set({ items: [], imageUrls: {} });
-    await window.copyclip.history.clear();
+    await window.potli.history.clear();
   },
   copyAgain: async (id) => {
-    await window.copyclip.history.copyAgain(id);
+    await window.potli.history.copyAgain(id);
   },
   loadImage: async (id) => {
     const cached = get().imageUrls[id];
     if (cached) return cached;
     try {
-      const url = await window.copyclip.history.getImage(id);
+      const url = await window.potli.history.getImage(id);
       set({ imageUrls: { ...get().imageUrls, [id]: url } });
       return url;
     } catch {
@@ -46,8 +46,8 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   }
 }));
 
-if (typeof window !== "undefined" && window.copyclip) {
-  window.copyclip.history.onChanged((items) => {
+if (typeof window !== "undefined" && window.potli) {
+  window.potli.history.onChanged((items) => {
     useHistoryStore.setState({ items, loaded: true });
   });
 }

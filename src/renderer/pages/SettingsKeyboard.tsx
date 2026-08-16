@@ -99,13 +99,13 @@ function ShortcutRow({
       if (!accelerator) return; // still just modifiers held down
 
       setCandidate(accelerator);
-      const validation = await window.copyclip.shortcut.validate(accelerator);
+      const validation = await window.potli.shortcut.validate(accelerator);
       if (!validation.valid) {
         setPendingError(validation.error ?? "Invalid shortcut.");
         return;
       }
 
-      const result = await window.copyclip.shortcut.set(id, accelerator);
+      const result = await window.potli.shortcut.set(id, accelerator);
       if (!result.success) {
         setPendingError(result.error ?? "Could not register this shortcut.");
         return;

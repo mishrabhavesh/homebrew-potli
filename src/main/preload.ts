@@ -75,12 +75,18 @@ const api = {
       return () => ipcRenderer.removeListener(IPC.WINDOW_NAVIGATE, listener);
     }
   },
+  panel: {
+    /** Hides the tray's custom floating quick-access panel — the panel calls
+     * this itself after a click-to-copy, a capture trigger, or a footer
+     * navigation, since it (not the main window) is the one that should close. */
+    hide: (): Promise<void> => ipcRenderer.invoke(IPC.PANEL_HIDE)
+  },
   app: {
     getInfo: (): Promise<{ version: string; platform: NodeJS.Platform }> => ipcRenderer.invoke(IPC.APP_GET_INFO),
     quit: (): Promise<void> => ipcRenderer.invoke(IPC.APP_QUIT)
   }
 };
 
-contextBridge.exposeInMainWorld("copyclip", api);
+contextBridge.exposeInMainWorld("potli", api);
 
-export type CopyClipApi = typeof api;
+export type PotliApi = typeof api;

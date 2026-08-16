@@ -1,19 +1,11 @@
 import { Tray, Menu, nativeImage, MenuItemConstructorOptions } from "electron";
 import path from "node:path";
-import { APP_NAME, TRAY_HISTORY_LIMIT, TRAY_HISTORY_LABEL_MAX_LENGTH } from "../../shared/constants";
+import { APP_NAME } from "../../shared/constants";
 import { settingsStore } from "../settings/settingsStore";
 import { shortcutManager } from "../shortcuts/shortcutManager";
-import { showMainWindow } from "../windows/mainWindow";
+import { toggleQuickPanel, hideQuickPanel } from "../windows/quickPanelWindow";
 import { humanizeAccelerator } from "../../shared/shortcut/humanize";
 import { bundledResourcesPath } from "../paths";
-import { historyStore } from "../history/historyStore";
-import { readHistoryImageBuffer } from "../history/historyImageStore";
-import { clipboardService } from "../clipboard/clipboardService";
-import { showToast } from "../notifications/toastWindow";
-import { formatRelativeTimeShort } from "../../shared/format/relativeTime";
-import { truncate } from "../../shared/format/text";
-import { logger } from "../logger";
-import type { HistoryItem } from "../../shared/types/history";
 
 let tray: Tray | null = null;
 
@@ -44,99 +36,57 @@ export function createTray(handlers: {
   tray = new Tray(image);
   tray.setToolTip(APP_NAME);
 
-  rebuildMenu(handlers);
-
-  settingsStore.onChange(() => rebuildMenu(handlers));
-  historyStore.onChange(() => rebuildMenu(handlers));
-
+  // Left click (or the only click on Windows/Linux) opens the custom
+  // floating quick-access panel — full History/thumbnails/spacing that a
+  // native OS menu can't give us. Right click keeps a slim native menu
+  // as the traditional fallback (also reachable from the panel's footer).
   tray.on("click", () => {
-    if (process.platform !== "darwin") {
-      // On Windows/Linux a plain click commonly toggles the app; on macOS the
-      // menu bar convention is to always show the dropdown menu instead.
-      showMainWindow("quick-capture");
-    }
+    if (tray) toggleQuickPanel(tray);
+  });
+
+  tray.on("right-click", () => {
+    hideQuickPanel();
+    if (tray) tray.popUpContextMenu(buildSlimMenu(handlers));
   });
 
   return tray;
-
-  function rebuildMenu(h: typeof handlers): void {
-    if (!tray) return;
-    const textAccel = humanizeAccelerator(settingsStore.get("shortcut"), process.platform);
-    const imageAccel = humanizeAccelerator(settingsStore.get("imageShortcut"), process.platform);
-    const paused = shortcutManager.isPaused();
-
-    const template: MenuItemConstructorOptions[] = [
-      { label: APP_NAME, enabled: false },
-      { type: "separator" },
-      { label: `Extract Text${textAccel ? `   ${textAccel}` : ""}`, click: h.onExtractText, enabled: !paused },
-      { label: `Copy as Image${imageAccel ? `   ${imageAccel}` : ""}`, click: h.onCopyImage, enabled: !paused },
-      { type: "separator" },
-      ...buildFlatHistoryItems(),
-      { type: "separator" },
-      { label: "View All History…", click: h.onOpenHistory },
-      { label: "Settings", click: h.onOpenSettings },
-      { type: "separator" },
-      {
-        label: "Pause Shortcuts",
-        type: "checkbox",
-        checked: paused,
-        click: () => {
-          const next = !shortcutManager.isPaused();
-          shortcutManager.setPaused(next);
-          settingsStore.update({ shortcutPaused: next });
-        }
-      },
-      { type: "separator" },
-      { label: `Quit ${APP_NAME}`, click: h.onQuit, role: "quit" }
-    ];
-
-    tray.setContextMenu(Menu.buildFromTemplate(template));
-  }
 }
 
-/**
- * The most recent captures (spec: "30 in quick view, rest in app"), shown
- * directly in the main tray dropdown — not tucked behind a "History" submenu
- * hover — for instant one-click re-copy. Both text and image entries are
- * clickable, matching the in-app History page's behavior. Image entries show
- * a 🖼 marker + dimensions instead of a thumbnail — a known, accepted
- * limitation of native OS menus.
- */
-function buildFlatHistoryItems(): MenuItemConstructorOptions[] {
-  const items = historyStore.getAll().slice(0, TRAY_HISTORY_LIMIT);
+function buildSlimMenu(handlers: {
+  onExtractText: () => void;
+  onCopyImage: () => void;
+  onOpenHistory: () => void;
+  onOpenSettings: () => void;
+  onQuit: () => void;
+}): Menu {
+  const textAccel = humanizeAccelerator(settingsStore.get("shortcut"), process.platform);
+  const imageAccel = humanizeAccelerator(settingsStore.get("imageShortcut"), process.platform);
+  const paused = shortcutManager.isPaused();
 
-  if (items.length === 0) {
-    return [{ label: "No captures yet", enabled: false }];
-  }
+  const template: MenuItemConstructorOptions[] = [
+    { label: APP_NAME, enabled: false },
+    { type: "separator" },
+    { label: `Extract Text${textAccel ? `   ${textAccel}` : ""}`, click: handlers.onExtractText, enabled: !paused },
+    { label: `Copy as Image${imageAccel ? `   ${imageAccel}` : ""}`, click: handlers.onCopyImage, enabled: !paused },
+    { type: "separator" },
+    { label: "View All History…", click: handlers.onOpenHistory },
+    { label: "Settings", click: handlers.onOpenSettings },
+    { type: "separator" },
+    {
+      label: "Pause Shortcuts",
+      type: "checkbox",
+      checked: paused,
+      click: () => {
+        const next = !shortcutManager.isPaused();
+        shortcutManager.setPaused(next);
+        settingsStore.update({ shortcutPaused: next });
+      }
+    },
+    { type: "separator" },
+    { label: `Quit ${APP_NAME}`, click: handlers.onQuit, role: "quit" }
+  ];
 
-  return items.map((item) => ({
-    label: trayLabelFor(item),
-    click: () => void copyHistoryItemToClipboard(item)
-  }));
-}
-
-function trayLabelFor(item: HistoryItem): string {
-  const time = formatRelativeTimeShort(item.createdAt);
-  if (item.kind === "text") {
-    const firstLine = item.text.split("\n").find((l) => l.trim().length > 0) ?? "(empty)";
-    return `${truncate(firstLine, TRAY_HISTORY_LABEL_MAX_LENGTH)}   ·   ${time}`;
-  }
-  return `🖼  Image · ${item.region.width}×${item.region.height}   ·   ${time}`;
-}
-
-async function copyHistoryItemToClipboard(item: HistoryItem): Promise<void> {
-  try {
-    if (item.kind === "text") {
-      clipboardService.writeText(item.text);
-    } else {
-      const buffer = await readHistoryImageBuffer(item.imagePath);
-      clipboardService.writeImagePng(buffer);
-    }
-    showToast(`${item.kind === "text" ? "Text" : "Image"} copied`, "success");
-  } catch (error) {
-    logger.error("Failed to re-copy history item from tray", error);
-    showToast("Couldn't copy that item", "error");
-  }
+  return Menu.buildFromTemplate(template);
 }
 
 export function getTray(): Tray | null {

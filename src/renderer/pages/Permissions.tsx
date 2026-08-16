@@ -12,7 +12,7 @@ export function Permissions() {
   const [requesting, setRequesting] = useState<"screen-recording" | "accessibility" | null>(null);
   const platform = useUiStore((s) => s.platform);
 
-  const refresh = () => window.copyclip.permissions.get().then(setSnapshot);
+  const refresh = () => window.potli.permissions.get().then(setSnapshot);
 
   useEffect(() => {
     refresh();
@@ -26,7 +26,7 @@ export function Permissions() {
   const grantAccess = async (kind: "screen-recording" | "accessibility") => {
     setRequesting(kind);
     try {
-      const next = await window.copyclip.permissions.request(kind);
+      const next = await window.potli.permissions.request(kind);
       setSnapshot(next);
     } finally {
       setRequesting(null);
@@ -37,7 +37,7 @@ export function Permissions() {
     <div className="mx-auto max-w-xl px-8 py-8">
       <h1 className="mb-2 text-[17px] font-semibold tracking-tight">Permissions</h1>
       <p className="mb-6 text-[12.5px] text-[#9c9ca3]">
-        CopyClip only asks for what the primary workflow actually needs.
+        Potli only asks for what the primary workflow actually needs.
       </p>
 
       {!isMac ? (
@@ -57,15 +57,15 @@ export function Permissions() {
             status={snapshot?.screenRecording ?? "not-determined"}
             requesting={requesting === "screen-recording"}
             onGrantAccess={() => grantAccess("screen-recording")}
-            onOpenSettings={() => window.copyclip.permissions.openSettings("screen-recording")}
+            onOpenSettings={() => window.potli.permissions.openSettings("screen-recording")}
           />
           <PermissionCard
             title="Accessibility"
-            description='Only needed if "Copy and paste automatically" is enabled — lets CopyClip simulate a paste keystroke.'
+            description='Only needed if "Copy and paste automatically" is enabled — lets Potli simulate a paste keystroke.'
             status={snapshot?.accessibility ?? "not-determined"}
             requesting={requesting === "accessibility"}
             onGrantAccess={() => grantAccess("accessibility")}
-            onOpenSettings={() => window.copyclip.permissions.openSettings("accessibility")}
+            onOpenSettings={() => window.potli.permissions.openSettings("accessibility")}
           />
         </div>
       )}
