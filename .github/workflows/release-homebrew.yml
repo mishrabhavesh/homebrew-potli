@@ -1,4 +1,4 @@
-name: Release (macOS, Linux) & publish to Homebrew
+name: Release (macOS, Linux) & publish to Homebrew + APT
 
 # Fires on every push to main, but the actual build/release only runs when
 # package.json's version doesn't already have a matching GitHub release —
@@ -8,10 +8,10 @@ name: Release (macOS, Linux) & publish to Homebrew
 # To ship a new version: bump "version" in package.json, commit, push to
 # main. CI takes it from there — builds the unsigned macOS DMGs and Linux
 # .deb/AppImage packages, publishes a GitHub Release with all of them
-# attached, and updates the Homebrew tap so `brew upgrade --cask potli`
-# picks it up. (There's no hosted APT repo yet — see the README's "Linux
-# packaging roadmap" section — so Linux users install the .deb/AppImage
-# straight from the release for now.)
+# attached, updates the Homebrew tap so `brew upgrade --cask potli` picks it
+# up, and rebuilds + re-signs the apt-potli repo so `sudo apt upgrade` picks
+# it up too. See CI_CD_SETUP.md for the one-time setup both of the latter
+# two need (a PAT per tap repo, plus a GPG signing key for APT).
 on:
   push:
     branches: [main]
@@ -135,6 +135,70 @@ jobs:
           echo "Uploading: ${ASSETS[*]}"
           # --clobber in case this step is re-run after a partial failure.
           gh release upload "v$VERSION" "${ASSETS[@]}" --repo "${{ github.repository }}" --clobber
+
+      # Hands the .deb files to update-apt-repo below without rebuilding —
+      # each job runs on its own fresh runner, so files don't persist between
+      # jobs on their own.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-debs
+          path: release/*.deb
+          retention-days: 1
+
+  update-apt-repo:
+    needs: [check-version, build-and-attach-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo (for the update script)
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - name: Checkout the apt-potli repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/apt-potli
+          # A fine-grained PAT scoped to apt-potli with Contents: read/write
+          # — GITHUB_TOKEN can't push to a different repo. Can be the same
+          # PAT value as HOMEBREW_TAP_TOKEN if it's scoped to both repos.
+          # See CI_CD_SETUP.md for how to create/add this secret.
+          token: ${{ secrets.APT_REPO_TOKEN }}
+          path: apt
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-debs
+          path: debs
+
+      - name: Import the APT signing key
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          echo "$APT_GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
+          KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/{print $5; exit}')
+          if [ -z "$KEY_ID" ]; then
+            echo "No secret key was imported — check the APT_GPG_PRIVATE_KEY secret." >&2
+            exit 1
+          fi
+          echo "GPG_KEY_ID=$KEY_ID" >> "$GITHUB_ENV"
+
+      - name: Rebuild the APT repo index and sign it
+        run: |
+          chmod +x main/scripts/update-apt-repo.sh
+          main/scripts/update-apt-repo.sh apt debs/*.deb
+
+      - name: Commit & push the apt-potli repo
+        working-directory: apt
+        run: |
+          git config user.name "potli-release-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "APT repo already up to date — nothing to commit."
+            exit 0
+          fi
+          git commit -m "potli ${{ needs.check-version.outputs.version }}"
+          git push
 
   update-tap:
     needs: [check-version, build-and-release]

@@ -11,9 +11,8 @@ and instantly copied. No cloud, no upload, no telemetry.
 [![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20arm64-0078D6?logo=windows)](#-windows)
 [![Linux](https://img.shields.io/badge/Linux-deb%20%7C%20AppImage-FCC624?logo=linux&logoColor=black)](#-linux)
 [![Unsigned build](https://img.shields.io/badge/code%20signing-none%20yet-orange)](#a-note-on-code-signing)
-[![Private repo](https://img.shields.io/badge/repo-private-lightgrey)](#)
 
-<sub>This source repo is private, but released builds below are installable by anyone you share a link with.</sub>
+<sub>This repo doubles as the Homebrew tap (it's named <code>homebrew-potli</code>, which is all Homebrew requires) — so it's public, source included, so that <code>brew install</code> works for anyone.</sub>
 
 </div>
 

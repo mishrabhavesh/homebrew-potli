@@ -1,56 +1,81 @@
-# Auto-publish to Homebrew on push to `main`
+# Auto-publish to Homebrew + APT on push to `main`
+
+**Your setup:** everything — app source, CI workflow, and the Homebrew Cask —
+lives in one repo, named `homebrew-potli`. That works fine: Homebrew only
+requires the repo be named `homebrew-<tapname>` and contain `Casks/<name>.rb`
+somewhere in it; it doesn't care what else is in there. (The only downside is
+`brew tap` clones your whole repo, app source included, not just the tiny Cask
+file — a small one-time download cost for anyone who taps it, not a
+functional problem.) Everything below assumes this single-repo setup.
 
 This wires up `.github/workflows/release-homebrew.yml` so that bumping
 `version` in `package.json` and pushing to `main` automatically:
 
 1. builds the unsigned macOS DMGs (arm64 + Intel) on a GitHub-hosted macOS runner
 2. builds the unsigned Linux `.deb` and AppImage (x64 + arm64) on a Linux runner
-3. publishes a GitHub Release in **this** repo (`potli`) with all of the above attached
-4. updates `Casks/potli.rb` in your **`homebrew-potli`** tap repo with the new
-   version and checksums, and pushes that commit
-5. rebuilds and re-signs your **`apt-potli`** APT repo with the new `.deb`s, so
-   `sudo apt update && sudo apt upgrade` picks up the new version too
+3. publishes a GitHub Release in this repo with all of the above attached
+4. updates `Casks/potli.rb` **in this same repo** with the new version and
+   checksums, and pushes that commit — no separate tap repo, no extra token
+   needed for this part; the workflow's own `GITHUB_TOKEN` can already push
+   back to the repo it's running in
+5. rebuilds and re-signs your separate **`apt-potli`** repo with the new `.deb`s
+   (this one genuinely does need to be a separate repo — see below — since it's
+   published via GitHub Pages, not `brew tap`), so `sudo apt update && sudo apt
+   upgrade` picks up the new version too
 
 A plain push to `main` that doesn't change `version` is a fast no-op — the
 workflow checks whether a release for the current version already exists
 and exits early if so, so it's safe to push docs/refactor commits without
 triggering a build.
 
-There are two independent one-time setups below — Homebrew and APT. Do either or
-both; each only powers its own job in the workflow, so skipping one just means
-that job's secret is missing and it'll fail (harmlessly — the other jobs still run).
-
 ## One-time setup — Homebrew
 
-### 1. Give the workflow permission to push to the tap repo
+None. Genuinely nothing to configure — just make sure `Casks/potli.rb` exists at
+your repo's root (not nested under a `tap/` or similar folder) before the first
+run, since the workflow reads/writes it at that exact path. If it's missing,
+this is the version to add:
 
-`GITHUB_TOKEN` (the token GitHub Actions gives every workflow run automatically)
-only has access to the repo the workflow lives in — it **cannot** push to
-`homebrew-potli`, since that's a separate repo. You need a personal access
-token for that one cross-repo step.
+```ruby
+cask "potli" do
+  arch arm: "-arm64", intel: ""
 
-1. Go to **github.com → Settings → Developer settings → Personal access
-   tokens → Fine-grained tokens → Generate new token**.
-2. Resource owner: your account. Repository access: **Only select
-   repositories** → `homebrew-potli`.
-3. Permissions: **Contents → Read and write**. Nothing else is needed.
-4. Set an expiration (GitHub caps fine-grained tokens at 1 year — put a
-   reminder to rotate it before then, or the auto-publish step will start
-   failing with a 403).
-5. Generate it and copy the token — you won't see it again.
+  version "0.1.0"
+  sha256 arm:   "e72fb44999a557179c01000759973428c7bb83646b500ecc937aa4db0a6ecee6",
+         intel: "961cfe0138215021b80b4c58b9176454b6d7ff5470793e4ee0e8b68a38fb4f90"
 
-### 2. Add it as a secret on the `potli` repo (not the tap repo)
+  url "https://github.com/mishrabhavesh/homebrew-potli/releases/download/v#{version}/Potli-#{version}#{arch}.dmg"
+  name "Potli"
+  desc "Screenshot-to-text OCR utility — your little bundle of everything you copy"
+  homepage "https://github.com/mishrabhavesh/homebrew-potli"
 
-In the **`potli`** repo (this repo, the one with the workflow):
-**Settings → Secrets and variables → Actions → New repository secret**
+  app "Potli.app"
 
-- Name: `HOMEBREW_TAP_TOKEN`
-- Value: the token from step 1
+  zap trash: [
+    "~/Library/Application Support/Potli",
+    "~/Library/Preferences/com.potli.app.plist",
+    "~/Library/Saved Application State/com.potli.app.savedState",
+    "~/Library/Caches/com.potli.app"
+  ]
 
-### 3. Push the workflow
+  caveats <<~EOS
+    Potli isn't code-signed or notarized by Apple, so the first time you open
+    it macOS Gatekeeper will say it "can't be opened" or "is damaged."
+
+    Run this once after installing (or after each upgrade):
+      xattr -dr com.apple.quarantine "#{appdir}/Potli.app"
+
+    Then open Potli as usual — Gatekeeper won't ask again for this copy.
+  EOS
+end
+```
+
+(The `version`/`sha256` values above are placeholders — CI overwrites them on
+every release. They just need to be valid Ruby syntax to start with.)
+
+Once that file exists at `Casks/potli.rb`, push the workflow itself:
 
 ```
-git add .github/workflows/release-homebrew.yml scripts/update-cask.js scripts/update-apt-repo.sh CI_CD_SETUP.md
+git add .github/workflows/release-homebrew.yml scripts/update-cask.js scripts/update-apt-repo.sh CI_CD_SETUP.md Casks/potli.rb
 git commit -m "Add CI/CD: auto-publish to Homebrew + APT on version bump"
 git push
 ```
@@ -117,15 +142,15 @@ Commit `potli-archive-keyring.asc` into the `apt-potli` repo (root level, next t
 `apt-signing-key.b64` anywhere** — it goes into a GitHub secret in the next step,
 then you should delete the local file.
 
-### 3. Add the secrets on the `potli` repo
+### 3. Add the secrets on the `homebrew-potli` repo (the one with the workflow)
 
 **Settings → Secrets and variables → Actions → New repository secret**, twice:
 
 - Name: `APT_GPG_PRIVATE_KEY` — Value: the full contents of `apt-signing-key.b64`
 - Name: `APT_REPO_TOKEN` — Value: a fine-grained PAT scoped to the `apt-potli` repo
-  with **Contents: Read and write** (same steps as `HOMEBREW_TAP_TOKEN` above, just
-  pointed at `apt-potli` instead — you can reuse one PAT for both if you scope it to
-  both repos when creating it, or keep them separate)
+  with **Contents: Read and write** (Settings → Developer settings → Personal access
+  tokens → Fine-grained tokens → Generate new token → Repository access: Only
+  select repositories → `apt-potli` → Permissions: Contents → Read and write)
 
 Once both secrets exist, delete `apt-signing-key.b64` and
 `potli-archive-keyring.asc` from your local machine (or at least out of any
@@ -144,8 +169,8 @@ git push && git push --tags   # `npm version` also creates a tag; pushing main i
 Or just hand-edit `"version"` in `package.json`, commit, and push to `main`.
 Either way, watch it run under the repo's **Actions** tab. When it's green:
 
-- `potli` repo → a new `vX.Y.Z` release with the DMGs, `.deb`s, and AppImages attached
-- `homebrew-potli` repo → `Casks/potli.rb` auto-updated and pushed
+- `homebrew-potli` repo (this one) → a new `vX.Y.Z` release with the DMGs, `.deb`s,
+  and AppImages attached, and `Casks/potli.rb` auto-updated and pushed
 - `apt-potli` repo → `pool/`, `Packages*`, `Release*`, `InRelease` regenerated and pushed
 
 Anyone who already ran `brew tap mishrabhavesh/potli` just needs `brew upgrade
@@ -165,16 +190,15 @@ upgrade` — no manual steps on your end beyond the version bump.
   runner produces *both* DMGs — the same thing that happens when you build
   locally on your M-series Mac. No Intel runner or build matrix is needed.
 - **First run will likely need a manual nudge.** The very first time this
-  runs, `homebrew-potli`'s `Casks/potli.rb` still has the version/checksums
-  you set by hand. If they already happen to match the current
-  `package.json` version, the workflow's `update-tap` job will see no diff
-  and just skip the commit — that's expected, not a bug.
-- **If `HOMEBREW_TAP_TOKEN` expires or is missing**, `build-and-release`
-  still succeeds (the GitHub Release gets published fine) but `update-tap`
-  fails at the checkout step. You'll see it fail in the Actions tab; the fix
-  is just generating a fresh token and updating the secret — nothing needs
-  re-running by hand once that's fixed, since the workflow is idempotent
-  (rerun the failed job from the Actions UI and it'll pick up from there).
+  runs, `Casks/potli.rb` still has the version/checksums you set by hand. If
+  they already happen to match the current `package.json` version, the
+  workflow's `update-tap` job will see no diff and just skip the commit —
+  that's expected, not a bug.
+- **The `update-tap` job needs no secret at all** — it pushes back into the
+  same repo the workflow lives in, using the workflow's own `GITHUB_TOKEN`
+  (already granted `contents: write` at the top of the file). If it ever
+  fails at the checkout or push step, it's almost certainly because
+  `Casks/potli.rb` doesn't exist at the repo root yet, not a missing secret.
 - **The APT repo is a "latest" channel, not a version archive.** Every publish
   replaces `apt-potli/pool/*.deb` rather than adding to it — old versions stop
   being installable from the repo once a new one ships (matches how the Homebrew

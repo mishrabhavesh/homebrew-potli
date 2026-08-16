@@ -1,16 +1,16 @@
 {
   "name": "potli",
   "productName": "Potli",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Press a shortcut, select any area of your screen, and the text is instantly copied. Local OCR, zero cloud, premium feel.",
   "author": {
     "name": "Potli",
     "email": "mishrabhavesh@users.noreply.github.com"
   },
-  "homepage": "https://github.com/mishrabhavesh/potli",
+  "homepage": "https://github.com/mishrabhavesh/homebrew-potli",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mishrabhavesh/potli.git"
+    "url": "https://github.com/mishrabhavesh/homebrew-potli.git"
   },
   "license": "UNLICENSED",
   "private": true,
