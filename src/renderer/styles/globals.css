@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas-light text-[#1c1c1e] antialiased;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .dark body {
+    @apply bg-canvas-dark text-[#ececef];
+  }
+
+  ::selection {
+    @apply bg-accent/25;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme("colors.border.dark") transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 128, 0.28);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .kbd-badge {
+    @apply inline-flex items-center justify-center rounded-md border border-border-light bg-surface-light px-2 py-1 text-[13px] font-medium tracking-tight text-[#1c1c1e] shadow-subtle;
+  }
+  .dark .kbd-badge {
+    @apply border-border-dark bg-white/[0.04] text-[#ececef];
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md bg-[#1c1c1e] px-4 py-2 text-[13px] font-medium text-white shadow-subtle transition-all duration-150 hover:bg-black active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .dark .btn-primary {
+    @apply bg-white text-[#141416] hover:bg-white/90;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-border-light bg-surface-light px-3.5 py-2 text-[13px] font-medium text-[#1c1c1e] transition-all duration-150 hover:bg-black/[0.03] active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .dark .btn-secondary {
+    @apply border-border-dark bg-white/[0.03] text-[#ececef] hover:bg-white/[0.06];
+  }
+
+  .panel {
+    @apply rounded-xl border border-border-light bg-surface-light shadow-subtle;
+  }
+  .dark .panel {
+    @apply border-border-dark bg-surface-dark;
+  }
+
+  .input-field {
+    @apply w-full rounded-md border border-border-light bg-surface-light px-3 py-2 text-[13px] outline-none transition-colors focus:border-accent/60 focus:ring-2 focus:ring-accent/15;
+  }
+  .dark .input-field {
+    @apply border-border-dark bg-white/[0.03] focus:border-accent/50;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium text-[#4b4b4f] transition-colors duration-100 hover:bg-black/[0.04] hover:text-[#1c1c1e];
+  }
+  .dark .nav-item {
+    @apply text-[#9c9ca3] hover:bg-white/[0.05] hover:text-[#ececef];
+  }
+  .nav-item.active {
+    @apply bg-accent/[0.09] text-accent;
+  }
+  .dark .nav-item.active {
+    @apply bg-accent/[0.16] text-[#7fa2ff];
+  }
+
+  .section-label {
+    @apply px-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#9c9ca3]/90;
+  }
+}

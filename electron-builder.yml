@@ -1,0 +1,74 @@
+appId: com.copyclip.app
+productName: CopyClip
+copyright: Copyright © 2026 CopyClip
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - package.json
+extraResources:
+  - from: resources
+    to: .
+    filter:
+      - "**/*"
+
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSScreenCaptureUsageDescription: CopyClip needs Screen Recording access to capture the area of your screen you select for text extraction.
+    NSAppleEventsUsageDescription: CopyClip uses this to paste extracted text into your current app when "Copy and paste automatically" is enabled.
+    LSUIElement: true
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+linux:
+  icon: build/icon.png
+  category: Utility
+  target:
+    - target: AppImage
+      arch: [x64, arm64]
+    - target: deb
+      arch: [x64, arm64]
+  desktop:
+    entry:
+      Name: CopyClip
+      Comment: Press a shortcut, select text on screen, it's copied.
+      Categories: Utility;
+
+deb:
+  depends:
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
